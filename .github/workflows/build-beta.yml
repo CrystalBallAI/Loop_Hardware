@@ -74,6 +74,8 @@ jobs:
         run: python -m PyInstaller --noconfirm --clean cbmi_loop.spec
       - name: Reset build stamp
         run: python build/inject_build_info.py --reset
+      - name: Install Inno Setup
+        run: choco install innosetup --no-progress -y
       - name: Build installer (Inno Setup)
         run: |
           & "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe" `
