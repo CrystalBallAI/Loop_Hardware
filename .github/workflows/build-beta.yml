@@ -68,7 +68,7 @@ jobs:
       - name: Icon + vendor(encrypt) + stamp
         run: |
           python build/make_icon.py
-          python vendor.py --encrypt
+          python vendor.py --encrypt-only
           python build/inject_build_info.py --tester "${{ inputs.tester }}" --days "${{ inputs.days }}"
       - name: Freeze (onedir)
         run: python -m PyInstaller --noconfirm --clean cbmi_loop.spec

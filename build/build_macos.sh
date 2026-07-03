@@ -27,7 +27,7 @@ echo "==> [1/6] icon"
 python3 build/make_icon.py
 
 echo "==> [2/6] vendor + ENCRYPT scoring IP"
-python3 vendor.py --encrypt
+python3 vendor.py --encrypt-only
 
 echo "==> [3/6] stamp build identity (tester=$TESTER, expiry=${DAYS}d)"
 python3 build/inject_build_info.py --tester "$TESTER" --days "$DAYS"

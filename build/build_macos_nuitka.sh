@@ -26,7 +26,7 @@ DMG="$DIST/CBMI-Loop-${TESTER}-nuitka.dmg"
 
 echo "==> icon + vendor(encrypt) + stamp"
 python3 build/make_icon.py
-python3 vendor.py --encrypt
+python3 vendor.py --encrypt-only
 python3 build/inject_build_info.py --tester "$TESTER" --days "$DAYS"
 
 echo "==> nuitka compile (this takes a while)"

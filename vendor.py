@@ -267,7 +267,19 @@ def main() -> int:
     ap.add_argument("--skip-import-check", action="store_true")
     ap.add_argument("--encrypt", action="store_true",
                     help="AES-encrypt the spec/library IP files after vendoring")
+    ap.add_argument("--encrypt-only", action="store_true",
+                    help="ONLY (idempotently) encrypt the already-committed runtime_data IP; "
+                         "do NOT re-vendor. Use on build/CI machines that don't have the "
+                         "source *_CodeBase folders (the vendored artifacts are committed).")
     args = ap.parse_args()
+
+    if args.encrypt_only:
+        print("encrypt-only: ensuring committed runtime_data IP is encrypted "
+              "(no re-vendor)")
+        got = encrypt_ip()
+        print(f"encrypted {got} file(s); {8 - got} already-encrypted")
+        print("vendor: OK (encrypt-only)")
+        return 0
 
     PKG_ROOT.mkdir(exist_ok=True)
     (PKG_ROOT / "__init__.py").write_text("", encoding="utf-8")
