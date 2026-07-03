@@ -19,7 +19,9 @@ AppPublisher=Crystalball AI
 DefaultDirName={autopf}\CBMI Loop
 DefaultGroupName=CBMI Loop
 DisableProgramGroupPage=yes
-OutputDir=dist
+; paths are relative to THIS .iss file (installer/), so ..\dist = the repo-root
+; dist\ where PyInstaller writes its onedir output
+OutputDir=..\dist
 OutputBaseFilename=CBMI-Loop-{#TesterId}-Setup
 Compression=lzma2
 SolidCompression=yes
@@ -30,8 +32,8 @@ WizardStyle=modern
 UninstallDisplayIcon={app}\CBMI-Loop.exe
 
 [Files]
-; the entire PyInstaller onedir tree (built by CI on a Windows runner)
-Source: "dist\CBMI-Loop\*"; DestDir: "{app}"; Flags: recursesubdirs createallsubdirs ignoreversion
+; the entire PyInstaller onedir tree (built by CI on a Windows runner) — at repo-root dist\
+Source: "..\dist\CBMI-Loop\*"; DestDir: "{app}"; Flags: recursesubdirs createallsubdirs ignoreversion
 
 [Icons]
 Name: "{group}\CBMI Loop"; Filename: "{app}\CBMI-Loop.exe"
