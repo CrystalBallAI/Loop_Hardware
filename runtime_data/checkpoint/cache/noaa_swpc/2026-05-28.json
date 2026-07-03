@@ -1,0 +1,7 @@
+{
+  "_note": "SYNTHETIC NOAA SWPC planetary K-index cache for the baseline capture date. Quiet geomagnetic conditions (Kp 2.3). Operator should replace with a real SWPC pull (https://services.swpc.noaa.gov/) for a production survey.",
+  "_status": "PLACEHOLDER",
+  "date": "2026-05-28",
+  "kp": 2.3,
+  "source": "NOAA SWPC planetary K-index (synthetic baseline)"
+}

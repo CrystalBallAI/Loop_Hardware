@@ -1,0 +1,1121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>CrystalBall Infinity LOOP — Load</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ---- extracted design tokens + Load-page rules (from the SPA) ---- */
+/* ==== main.css ==== */
+:root{
+  
+  --bg-casing:#18181b; --bg-display:#18181b; --bg-panel:#18181b; --bg-float:#18181b;
+  --bg:#18181b;
+  --acc:#00bfff;
+  --p1:rgba(255,255,255,.92); --p2:rgba(200,215,228,.68); --p3:rgba(200,215,228,.38);
+  --line:rgba(200,215,228,.07);
+  --warn:rgba(210,170,78,1); --crit:rgba(200,98,98,1); --cert:rgba(100,190,148,1);
+  
+  --white:#ffffff;
+  --teal:rgba(100,190,148,1); --amber:rgba(210,170,78,1); --red:rgba(200,98,98,1);
+  --t1:rgba(200,215,228,.72); --t2:rgba(200,215,228,.38); --t3:rgba(200,215,228,.18);
+  --fh:'Barlow',sans-serif; --fm:'IBM Plex Mono',monospace; --fr:'Raleway',sans-serif;
+}
+
+@keyframes blink{0%,100%{opacity:1;}50%{opacity:.15;}}
+
+@keyframes masterIn{0%{opacity:0;transform:translate(-50%,-50%) scale(.3);}60%{opacity:1;}80%{transform:translate(-50%,-50%) scale(1.04);}100%{opacity:1;transform:translate(-50%,-50%) scale(1);}}
+
+@keyframes fu{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+
+@keyframes srRailIn{from{opacity:0;transform:translateX(0px) scale(.92);}to{opacity:1;transform:translateX(0) scale(1);}}
+
+@keyframes srPulse{0%,100%{opacity:.4;}50%{opacity:1;}}
+
+
+.pf-chip{font-family:var(--fm);font-size:8px;font-weight:500;letter-spacing:.12em;text-transform:uppercase;padding:6px 12px;border-radius:2px;cursor:pointer;background:transparent;border:.5px solid rgba(200,215,228,.1);color:rgba(255,255,255,.45);transition:all .15s;}
+
+.pf-chip:hover{color:rgba(255,255,255,.85);border-color:rgba(255,255,255,.22);}
+
+.pf-chip.active{color:#ffffff;background:rgba(0,191,255,.1);border-color:rgba(0,191,255,.5);}
+
+
+
+.ld-view{position:fixed;top:108px;left:0;right:0;bottom:64px;z-index:5;overflow-y:auto;padding:24px 48px 48px;display:none;}
+
+.ld-view.show{display:block;}
+
+.ld-view::-webkit-scrollbar{width:6px;}
+
+.ld-view::-webkit-scrollbar-thumb{background:rgba(200,215,228,.08);border-radius:3px;}
+
+
+.ld-head{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:8px;}
+
+.ld-title{font-family:var(--fh);font-weight:700;font-size:20px;letter-spacing:.04em;color:rgba(255,255,255,.92);}
+
+.ld-sub{font-family:var(--fm);font-size:9px;color:rgba(255,255,255,.32);letter-spacing:.12em;text-transform:uppercase;}
+
+
+
+.ld-prog{display:flex;align-items:center;gap:14px;margin:14px 0 18px;padding:10px 14px;background:rgba(200,215,228,.02);border:.5px solid rgba(200,215,228,.06);border-radius:3px;}
+
+.ld-prog-bar{flex:1;height:3px;background:rgba(200,215,228,.06);border-radius:2px;overflow:hidden;}
+
+.ld-prog-fill{height:100%;background:var(--acc);border-radius:2px;transition:width .4s;}
+
+.ld-prog-num{font-family:'IBM Plex Mono',var(--fm);font-size:10.5px;color:rgba(255,255,255,.7);letter-spacing:.04em;}
+
+.ld-prog-lbl{font-family:var(--fm);font-size:8px;font-weight:500;letter-spacing:.16em;text-transform:uppercase;color:rgba(255,255,255,.4);}
+
+
+
+.ld-filters{display:flex;gap:8px;margin-bottom:16px;align-items:center;flex-wrap:wrap;}
+
+
+
+.ld-section{margin-top:20px;}
+
+.ld-section:first-of-type{margin-top:0;}
+
+.ld-shead{display:flex;align-items:baseline;gap:14px;margin-bottom:8px;}
+
+.ld-sname{font-family:var(--fh);font-weight:600;font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:rgba(255,255,255,.7);}
+
+.ld-scount{font-family:var(--fm);font-size:8px;font-weight:400;color:rgba(255,255,255,.3);letter-spacing:.1em;}
+
+.ld-srule{flex:1;height:.5px;background:linear-gradient(to right,rgba(200,215,228,.1),transparent);}
+
+
+.ld-table{width:100%;border-collapse:collapse;background:rgba(200,215,228,.012);border:.5px solid rgba(200,215,228,.05);border-radius:3px;overflow:hidden;}
+
+.ld-table thead th{font-family:var(--fm);font-size:8px;font-weight:500;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.35);text-align:left;padding:11px 16px;background:rgba(200,215,228,.015);border-bottom:.5px solid rgba(200,215,228,.05);}
+
+.ld-table thead th:nth-child(2){width:120px;text-align:center;}
+
+.ld-table thead th:nth-child(3){width:38%;}
+
+.ld-table thead th:nth-child(4){text-align:center;width:120px;}
+
+
+.ld-row{border-bottom:.5px solid rgba(200,215,228,.03);transition:background .12s;}
+
+.ld-row:hover{background:rgba(200,215,228,.015);}
+
+.ld-row td{padding:11px 16px;vertical-align:middle;}
+
+
+.ld-iname{font-family:var(--fh);font-weight:600;font-size:12.5px;color:rgba(255,255,255,.9);letter-spacing:-.005em;}
+
+.ld-iname-fmt{font-family:'IBM Plex Mono',var(--fm);font-size:9.5px;color:rgba(255,255,255,.36);margin-top:2px;letter-spacing:.02em;}
+
+
+.ld-fn{font-family:'IBM Plex Mono',var(--fm);font-size:10.5px;color:rgba(255,255,255,.7);letter-spacing:-.005em;}
+
+.ld-fn-sz{font-family:'IBM Plex Mono',var(--fm);font-size:9px;color:rgba(255,255,255,.32);margin-top:2px;}
+
+.ld-fn-empty{font-family:var(--fm);font-size:9px;color:rgba(255,255,255,.22);letter-spacing:.1em;text-transform:uppercase;font-style:italic;}
+
+
+
+.ld-spill{display:inline-block;font-family:var(--fm);font-size:8px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;padding:5px 11px;border-radius:2px;white-space:nowrap;}
+
+.ld-spill.uploaded{color:#ffffff;background:rgba(200,215,228,.06);border:.5px solid rgba(255,255,255,.28);}
+
+.ld-spill.pending{color:rgba(255,255,255,.55);background:transparent;border:.5px dashed rgba(255,255,255,.22);}
+
+.ld-spill.optional{color:rgba(255,255,255,.42);background:transparent;border:.5px dashed rgba(255,255,255,.16);}
+
+
+
+.ld-up{display:inline-flex;align-items:center;gap:6px;font-family:var(--fm);font-size:8px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;padding:6px 12px;border-radius:2px;cursor:pointer;background:transparent;border:.5px solid rgba(255,255,255,.18);color:rgba(255,255,255,.7);transition:all .15s;}
+
+.ld-up:hover{color:#ffffff;border-color:rgba(255,255,255,.4);background:rgba(200,215,228,.05);}
+
+.ld-up svg{width:10px;height:10px;}
+
+.ld-up.replace{color:rgba(255,255,255,.5);border-color:rgba(200,215,228,.12);}
+
+.ld-up.replace:hover{color:#ffffff;border-color:rgba(255,255,255,.4);background:rgba(200,215,228,.04);}
+
+
+
+#ld-fileinput{display:none;}
+
+
+
+
+.ld-hero{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:24px;padding:26px 36px;margin-bottom:16px;background:rgba(200,215,228,.018);border:.5px solid rgba(200,215,228,.07);border-radius:4px;}
+
+.ld-hero-left{align-self:center;}
+
+.ld-hero-title{font-family:var(--fh);font-weight:650;font-size:26px;letter-spacing:-.01em;color:rgba(255,255,255,.95);}
+
+.ld-hero-tag{font-family:var(--fh);font-weight:400;font-size:13px;line-height:1.5;color:rgba(200,215,228,.5);margin-top:8px;}
+
+.ld-hero-ringwrap{display:flex;flex-direction:column;align-items:center;}
+
+.ld-ring{position:relative;width:128px;height:128px;}
+
+.ld-ring svg{width:100%;height:100%;transform:rotate(-90deg);}
+
+.ld-ring-track{fill:none;stroke:rgba(200,215,228,.07);stroke-width:6;}
+
+.ld-ring-arc{fill:none;stroke:var(--acc);stroke-width:6;stroke-linecap:round;stroke-dasharray:326.7;stroke-dashoffset:326.7;transition:stroke-dashoffset .6s cubic-bezier(.4,0,.2,1);filter:drop-shadow(0 0 6px rgba(0,191,255,.4));}
+
+.ld-ring-pct{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:var(--fh);font-weight:650;font-size:30px;letter-spacing:-.02em;color:var(--acc);}
+
+.ld-hero-count{font-family:var(--fh);font-weight:600;font-size:14px;color:rgba(255,255,255,.88);margin-top:14px;}
+
+.ld-hero-rem{font-family:var(--fm);font-size:9px;letter-spacing:.08em;color:rgba(200,215,228,.42);margin-top:5px;text-transform:uppercase;}
+
+.ld-hero-right{}
+
+
+
+.ld-drop{display:flex;flex-direction:column;align-items:center;gap:6px;padding:30px 24px;margin-bottom:18px;background:rgba(200,215,228,.012);border:1px dashed rgba(255,255,255,.16);border-radius:4px;transition:all .2s;}
+
+.ld-drop.dragover{border-color:rgba(255,255,255,.4);background:rgba(200,215,228,.04);}
+
+.ld-drop-cloud{width:34px;height:26px;color:rgba(200,215,228,.45);margin-bottom:2px;}
+
+.ld-drop.dragover .ld-drop-cloud{color:rgba(230,232,236,.85);}
+
+.ld-drop-main{font-family:var(--fh);font-weight:500;font-size:15px;color:rgba(255,255,255,.82);}
+
+.ld-drop-or{font-family:var(--fm);font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:rgba(200,215,228,.35);}
+
+.ld-drop-btn{font-family:var(--fm);font-size:9px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;padding:9px 22px;border-radius:2px;cursor:pointer;background:transparent;border:.5px solid rgba(255,255,255,.28);color:rgba(255,255,255,.85);transition:all .15s;}
+
+.ld-drop-btn:hover{border-color:rgba(255,255,255,.45);color:#ffffff;background:rgba(200,215,228,.05);}
+
+.ld-drop-fmts{font-family:var(--fm);font-size:8.5px;letter-spacing:.06em;color:rgba(200,215,228,.3);margin-top:8px;}
+
+.ld-drop-msg{font-family:var(--fm);font-size:9px;letter-spacing:.05em;color:rgba(210,214,220,.7);min-height:12px;margin-top:2px;}
+
+
+
+.ld-reqhead{display:flex;align-items:baseline;gap:14px;margin:6px 0 14px;}
+
+.ld-reqhead-t{font-family:var(--fh);font-weight:600;font-size:15px;color:rgba(255,255,255,.9);}
+
+.ld-reqhead-c{font-family:var(--fm);font-size:10px;letter-spacing:.06em;color:rgba(200,215,228,.42);}
+
+
+
+.ld-csec{margin-bottom:22px;}
+
+.ld-csec-head{display:flex;align-items:center;gap:12px;margin-bottom:10px;cursor:pointer;user-select:none;}
+
+.ld-csec-name{font-family:var(--fh);font-weight:600;font-size:10.5px;letter-spacing:.2em;text-transform:uppercase;color:rgba(255,255,255,.6);}
+
+.ld-csec-count{font-family:var(--fm);font-size:8px;letter-spacing:.1em;color:rgba(200,215,228,.32);}
+
+.ld-csec-rule{flex:1;height:.5px;background:linear-gradient(to right,rgba(200,215,228,.09),transparent);}
+
+.ld-csec-chev{flex:none;width:12px;height:12px;color:rgba(190,194,200,.5);transition:transform .2s;}
+
+.ld-csec.collapsed .ld-csec-chev{transform:rotate(-90deg);}
+
+.ld-csec.collapsed .ld-csec-body{display:none;}
+
+
+
+.ld-cardgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(268px,1fr));gap:14px;}
+
+.ld-card{position:relative;display:flex;flex-direction:column;padding:16px 18px;background:rgba(200,215,228,.018);border:.5px solid rgba(200,215,228,.07);border-radius:4px;transition:border-color .15s,background .15s;}
+
+.ld-card:hover{border-color:rgba(200,215,228,.14);}
+
+.ld-card.uploaded{border-color:rgba(255,255,255,.18);}
+
+
+.ld-card-head{display:flex;align-items:center;gap:11px;cursor:pointer;user-select:none;}
+
+.ld-card-ic{flex:none;width:26px;height:26px;display:flex;align-items:center;justify-content:center;color:rgba(220,222,226,.7);}
+
+.ld-card-ic svg{width:20px;height:20px;}
+
+.ld-card-headtext{flex:1;min-width:0;}
+
+.ld-card-name{font-family:var(--fh);font-weight:600;font-size:14px;color:#ffffff;letter-spacing:-.005em;line-height:1.2;}
+
+.ld-card-fmt{font-family:var(--fm);font-size:9.5px;color:rgba(186,190,196,.55);margin-top:2px;letter-spacing:.02em;}
+
+.ld-card-status{flex:none;width:19px;height:19px;}
+
+.ld-card-status svg{width:19px;height:19px;}
+
+.ld-card-status.uploaded{color:rgba(255,255,255,.92);}
+
+.ld-card-status.pending,.ld-card-status.optional{color:rgba(190,194,200,.3);}
+
+.ld-card-chev{flex:none;width:12px;height:12px;color:rgba(190,194,200,.45);transition:transform .2s;}
+
+.ld-card.collapsed .ld-card-chev{transform:rotate(-90deg);}
+
+
+.ld-card-collapse{overflow:hidden;}
+
+.ld-card.collapsed .ld-card-collapse{display:none;}
+
+.ld-card-body{margin-top:14px;}
+
+.ld-card-pv{font-family:var(--fh);font-weight:600;font-size:15px;color:rgba(244,245,246,.95);letter-spacing:-.01em;word-break:break-all;}
+
+.ld-card-sz{font-family:var(--fm);font-size:10px;color:rgba(176,180,186,.6);margin-top:3px;}
+
+.ld-card-foot{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:12px;}
+
+.ld-card-at{font-family:var(--fm);font-size:9px;letter-spacing:.02em;text-transform:none;color:rgba(170,174,180,.6);}
+
+.ld-card-opt{display:inline-flex;align-items:center;gap:5px;font-family:var(--fm);font-size:8px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:rgba(200,202,206,.6);margin-top:14px;}
+
+.ld-card-note{font-family:var(--fh);font-size:11px;color:rgba(190,194,200,.62);margin-top:5px;line-height:1.4;}
+
+.ld-card-btn{font-family:var(--fm);font-size:8.5px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;width:100%;padding:9px 0;margin-top:12px;border-radius:2px;cursor:pointer;background:transparent;border:.5px solid rgba(255,255,255,.2);color:rgba(240,241,242,.85);transition:all .15s;}
+
+.ld-card-btn:hover{border-color:rgba(255,255,255,.45);color:#ffffff;background:rgba(200,215,228,.05);}
+
+.ld-card-empty{font-family:var(--fm);font-size:8.5px;letter-spacing:.08em;text-transform:uppercase;color:rgba(170,174,180,.35);margin-top:8px;text-align:center;}
+
+.ld-card-replace{margin-left:auto;font-family:var(--fm);font-size:8px;letter-spacing:.1em;text-transform:uppercase;padding:3px 9px;border-radius:2px;cursor:pointer;background:transparent;border:.5px solid rgba(200,215,228,.14);color:rgba(200,204,210,.6);opacity:0;transition:opacity .15s;}
+
+.ld-card:hover .ld-card-replace{opacity:1;}
+
+.ld-card-replace:hover{border-color:rgba(255,255,255,.4);color:#ffffff;}
+
+
+.ld-info{position:relative;display:inline-flex;align-items:center;justify-content:center;width:13px;height:13px;margin-left:5px;color:rgba(180,184,190,.55);cursor:help;vertical-align:middle;outline:none;}
+
+.ld-info svg{width:13px;height:13px;}
+
+.ld-info:hover,.ld-info:focus{color:rgba(220,224,230,.9);}
+
+.ld-tip{position:absolute;bottom:calc(100% + 7px);left:50%;transform:translateX(-50%);width:max-content;max-width:230px;padding:8px 10px;background:#18181b;border:.5px solid rgba(255,255,255,.16);border-radius:4px;font-family:var(--fh);font-size:11px;font-weight:400;line-height:1.4;letter-spacing:0;text-transform:none;color:rgba(214,218,224,.92);box-shadow:0 8px 22px rgba(0,0,0,.5);opacity:0;visibility:hidden;transition:opacity .14s;z-index:60;pointer-events:none;white-space:normal;text-align:left;}
+
+.ld-tip::after{content:'';position:absolute;top:100%;left:50%;transform:translateX(-50%);border:5px solid transparent;border-top-color:#18181b;}
+
+.ld-info:hover .ld-tip,.ld-info:focus .ld-tip{opacity:1;visibility:visible;}
+
+
+.ld-card-form{display:none;}
+
+
+
+.ld-about{display:flex;flex-wrap:wrap;align-items:center;gap:34px;padding:20px 28px;margin-top:24px;background:rgba(200,215,228,.018);border:.5px solid rgba(200,215,228,.07);border-radius:4px;}
+
+.ld-about-title{font-family:var(--fh);font-weight:600;font-size:11px;letter-spacing:.04em;color:rgba(255,255,255,.85);width:100%;margin-bottom:-4px;}
+
+.ld-about-item{display:flex;align-items:center;gap:10px;}
+
+.ld-about-ic{width:22px;height:22px;display:flex;align-items:center;justify-content:center;color:rgba(200,215,228,.5);}
+
+.ld-about-ic svg{width:18px;height:18px;}
+
+.ld-about-k{font-family:var(--fm);font-size:8px;letter-spacing:.1em;text-transform:uppercase;color:rgba(200,215,228,.4);}
+
+.ld-about-v{font-family:var(--fh);font-weight:600;font-size:13px;color:rgba(255,255,255,.9);margin-top:2px;}
+
+@media(max-width:1100px){.ld-hero{grid-template-columns:1fr;text-align:center;}.ld-hero-left{text-align:center;}.ld-hero-right{display:none;}}
+
+
+
+.ld-formsec{margin-top:16px;padding:18px 20px;background:rgba(200,215,228,.012);border:.5px solid rgba(200,215,228,.06);border-radius:4px;}
+
+.ld-formsec-head{font-family:var(--fh);font-weight:600;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:rgba(244,245,246,.82);margin-bottom:14px;}
+
+.ld-fgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px 20px;}
+
+.ld-fgroup-sep{grid-column:1/-1;font-family:var(--fm);font-size:8.5px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:rgba(0,191,255,.6);padding:12px 0 3px;border-bottom:.5px solid rgba(200,215,228,.08);margin:2px 0 2px;}
+.ld-fgroup-sep:first-child{padding-top:0;}
+
+.ld-fg{display:flex;flex-direction:column;min-width:0;}
+
+.ld-flabel{font-family:var(--fm);font-size:9px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;color:rgba(196,200,206,.7);margin-bottom:6px;}
+
+.ld-freq{color:rgba(190,110,110,.85);margin-left:3px;}
+
+.ld-finput{font-family:var(--fm);font-size:12px;color:#ffffff;background:rgba(200,215,228,.03);border:.5px solid rgba(200,215,228,.14);border-radius:2px;padding:8px 10px;outline:none;transition:border-color .15s;width:100%;}
+
+.ld-finput:focus{border-color:rgba(255,255,255,.42);}
+
+.ld-finput.invalid{border-color:var(--red);}
+
+.ld-finput::placeholder{color:rgba(180,184,190,.4);}
+
+select.ld-finput{appearance:none;cursor:pointer;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 10 10'><path d='M2.5 4l2.5 2.5L7.5 4' stroke='%23a0a4aa' stroke-width='1' fill='none' stroke-linecap='round'/></svg>");background-repeat:no-repeat;background-position:right 9px center;padding-right:26px;}
+
+select.ld-finput option{background:#18181b;color:#ffffff;}
+
+.ld-ftext{min-height:60px;resize:vertical;line-height:1.4;}
+
+.ld-fhelp{font-family:var(--fh);font-size:10px;color:rgba(176,180,186,.5);margin-top:5px;line-height:1.35;}
+
+.ld-ferr{font-family:var(--fm);font-size:9px;letter-spacing:.02em;color:var(--red);margin-top:4px;min-height:11px;}
+
+.ld-fchk{display:flex;align-items:center;gap:9px;cursor:pointer;font-family:var(--fh);font-size:12px;color:rgba(230,232,235,.82);padding-top:22px;}
+
+.ld-fchk input{width:15px;height:15px;accent-color:#c8ccd2;cursor:pointer;flex:none;}
+
+.ld-fchk .ld-freq{margin-left:2px;}
+
+
+.ld-frow{border:.5px solid rgba(200,215,228,.07);border-radius:3px;padding:14px 16px;margin-bottom:12px;background:rgba(200,215,228,.008);}
+
+.ld-frow-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+
+.ld-frow-head span{font-family:var(--fm);font-size:9px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:rgba(220,222,226,.7);}
+
+.ld-fdel{font-family:var(--fm);font-size:8px;letter-spacing:.1em;text-transform:uppercase;padding:4px 10px;border-radius:2px;cursor:pointer;background:transparent;border:.5px solid rgba(184,68,68,.4);color:rgba(212,140,140,.85);transition:all .15s;}
+
+.ld-fdel:hover{border-color:var(--red);color:#ffffff;background:rgba(184,68,68,.12);}
+
+.ld-fadd{font-family:var(--fm);font-size:9px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;padding:9px 16px;border-radius:2px;cursor:pointer;background:transparent;border:.5px dashed rgba(255,255,255,.22);color:rgba(230,232,235,.8);transition:all .15s;}
+
+.ld-fadd:hover{border-color:rgba(255,255,255,.45);color:#ffffff;background:rgba(200,215,228,.04);}
+
+.ld-fempty{font-family:var(--fm);font-size:10px;letter-spacing:.06em;color:rgba(176,180,186,.4);padding:8px 0 14px;}
+
+/* per-point file slots (RINEX / RTK export / op-log) inside a repeatable point row */
+.ld-pfiles{display:flex;flex-direction:column;gap:8px;margin-bottom:14px;}
+.ld-pfile{display:flex;align-items:center;gap:12px;padding:9px 12px;border:.5px solid var(--line);border-radius:3px;background:rgba(200,215,228,.025);}
+.ld-pfile.done{border-color:rgba(255,255,255,.16);background:rgba(200,215,228,.04);}
+.ld-pf-meta{display:flex;flex-direction:column;gap:2px;min-width:0;flex:1;}
+.ld-pf-name{font-family:var(--fh);font-weight:600;font-size:12px;color:rgba(255,255,255,.9);}
+.ld-pf-fmt{font-family:'IBM Plex Mono',var(--fm);font-size:8.5px;letter-spacing:.04em;color:rgba(186,190,196,.5);}
+.ld-pf-right{display:flex;align-items:center;gap:10px;flex:none;}
+.ld-pf-req{font-family:var(--fm);font-size:7.5px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:rgba(210,170,78,.9);}
+.ld-pf-opt{font-family:var(--fm);font-size:7.5px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:rgba(200,215,228,.34);}
+/* required (red *) / optional markers on file names — see legend under the chips */
+.ld-req-star{color:#ff5a6a;font-weight:700;font-size:12px;line-height:1;margin-left:5px;vertical-align:middle;}
+.ld-opt-tag{font-family:var(--fm);font-size:7.5px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:rgba(200,215,228,.42);margin-left:8px;vertical-align:middle;}
+.ld-reqlegend{display:flex;align-items:center;gap:16px;margin:0 0 2px;font-family:var(--fm);font-size:8px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:rgba(200,215,228,.4);}
+.ld-reqlegend b{color:#ff5a6a;font-size:11px;margin-right:3px;}
+.ld-pf-fn{display:flex;flex-direction:column;align-items:flex-end;max-width:210px;text-align:right;font-family:'IBM Plex Mono',var(--fm);font-size:10px;color:rgba(255,255,255,.78);word-break:break-all;}
+.ld-pf-sz{font-size:8.5px;color:rgba(176,180,186,.5);margin-top:1px;}
+.ld-pf-btn{font-family:var(--fm);font-size:8px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;padding:6px 13px;border-radius:2px;cursor:pointer;background:transparent;border:.5px solid var(--line);color:var(--p2);transition:all .15s;}
+.ld-pf-btn:hover{color:var(--acc);border-color:rgba(0,191,255,.4);}
+.ld-pf-btn.up{border-color:rgba(255,255,255,.22);color:rgba(255,255,255,.82);}
+
+
+.ld-submitbar{display:flex;align-items:center;justify-content:flex-end;gap:18px;margin-top:24px;padding-top:20px;border-top:.5px solid rgba(200,215,228,.07);}
+
+.ld-submit-msg{flex:1;font-family:var(--fm);font-size:10px;letter-spacing:.02em;color:rgba(176,180,186,.6);}
+
+.ld-submit-msg.ok{color:var(--teal);}
+
+.ld-submit-msg.err{color:rgba(212,140,140,.95);}
+
+.ld-submit-btn{font-family:var(--fm);font-size:9.5px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;padding:11px 26px;border-radius:2px;cursor:pointer;background:rgba(200,215,228,.06);border:.5px solid rgba(255,255,255,.32);color:#ffffff;transition:all .15s;}
+
+.ld-submit-btn:hover{background:rgba(200,215,228,.12);border-color:rgba(255,255,255,.5);}
+
+@keyframes hwFloat{0%,100%{transform:translateY(0);}50%{transform:translateY(-8px);}}
+
+@keyframes dr-region-pulse{
+  0%,100%{opacity:.85;}
+  50%{opacity:1;}
+}
+
+@keyframes orFade{from{opacity:0;transform:translateX(-50%) translateY(-6px);}to{opacity:1;transform:translateX(-50%) translateY(0);}}
+
+.sr-view,.pf-view,#view-load,#view-origin,.del-view{background:transparent;}
+
+
+
+:root{--railW:130px;}
+
+
+
+.pf-table,.ld-table{background:transparent !important;}
+
+.pf-table th,.ld-table th{background:transparent !important;color:var(--p3) !important;
+  border-color:var(--line) !important;font-family:var(--fm) !important;
+  letter-spacing:.12em !important;text-transform:uppercase !important;}
+
+.pf-table td,.ld-table td,.d-sec-row{color:var(--p2) !important;border-color:var(--line) !important;}
+
+.pf-table tr:hover td,.ld-table tr:hover td{background:rgba(200,215,228,.02) !important;}
+
+.pf-chip{background:rgba(200,215,228,.04) !important;border:.5px solid var(--line) !important;color:var(--p2) !important;}
+
+.pf-chip:hover,.pf-chip.active{color:var(--p1) !important;border-color:rgba(0,191,255,.4) !important;}
+
+
+
+.ld-card,.ld-csec,.ld-info{background:var(--bg-panel) !important;border-color:var(--line) !important;box-shadow:none !important;}
+
+.ld-card-status{font-family:var(--fm) !important;}
+
+.ld-finput{background:var(--bg-float) !important;border:.5px solid var(--line) !important;color:var(--p1) !important;}
+
+.ld-up,.ld-card-replace,.ld-submit-msg{background:transparent !important;border:.5px solid var(--line) !important;color:var(--p2) !important;}
+
+.ld-up:hover,.ld-card-replace:hover{color:var(--acc) !important;border-color:rgba(0,191,255,.4) !important;}
+
+.ld-drop{background:var(--bg-float) !important;border:.5px dashed var(--line) !important;}
+
+.ld-row{border-color:var(--line) !important;}
+
+.ld-tip,.ld-spill{background:var(--bg-float) !important;border-color:var(--line) !important;color:var(--p2) !important;}
+
+.ld-fchk{accent-color:var(--acc) !important;}
+
+/* ==== nav-band-css.css ==== */
+:root{--railW:0px !important;}
+
+@keyframes nbarIn{to{opacity:1;}}
+
+.ld-view{top:112px !important;}
+
+/* ==== infinity-proof.css ==== */
+
+.pf-chip{font-family:var(--fm);font-size:8px;font-weight:500;letter-spacing:.12em;text-transform:uppercase;padding:6px 12px;border-radius:2px;cursor:pointer;background:transparent;border:.5px solid rgba(200,215,228,.1);color:rgba(255,255,255,.45);transition:all .15s;}
+
+.pf-chip:hover{color:rgba(255,255,255,.85);border-color:rgba(255,255,255,.22);}
+
+.pf-chip.active{color:#ffffff;background:rgba(0,191,255,.1);border-color:rgba(0,191,255,.5);}
+
+/* ==== zz-final-fixes.css ==== */
+
+.ld-view{ top:88px !important; }
+
+@keyframes cmdkIn{ from{ opacity:0; transform:translateY(-6px); } to{ opacity:1; transform:none; } }
+
+
+
+.hw-view,.del-view,.pf-view,.sr-view,.ld-view,.ln-view,.an-view,.or-view,.detail-panel{ top:var(--ctop) !important; }
+
+@keyframes masterIn{
+  0%{opacity:0;transform:translate(-50%,-50%) scale(.3);}
+  60%{opacity:1;}80%{transform:translate(-50%,-50%) scale(1.04);}
+  100%{opacity:1;transform:translate(-50%,-50%) scale(1);}
+}
+
+/* ---- standalone shell overrides ---- */
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:var(--fh);
+  -webkit-font-smoothing:antialiased;}
+#view-load{position:static !important;inset:auto !important;top:auto !important;display:block !important;max-width:1180px;margin:0 auto;padding:30px 28px 70px;overflow:visible !important;z-index:auto !important;}
+#ld-about{display:flex;flex-wrap:wrap;gap:14px 26px;align-content:flex-start;}
+</style>
+</head>
+<body>
+
+<div class="ld-view" id="view-load">
+  <input type="file" id="ld-fileinput" multiple/>
+
+  <!-- HERO · Mission Readiness -->
+  <div class="ld-hero">
+    <div class="ld-hero-left">
+      <div class="ld-hero-title">Mission Readiness</div>
+    </div>
+    <div class="ld-hero-ringwrap">
+      <div class="ld-ring">
+        <svg viewBox="0 0 120 120">
+          <circle class="ld-ring-track" cx="60" cy="60" r="52"/>
+          <circle class="ld-ring-arc" id="ld-ring-arc" cx="60" cy="60" r="52"/>
+        </svg>
+        <div class="ld-ring-pct" id="ld-ring-pct">0%</div>
+      </div>
+      <div class="ld-hero-count" id="ld-hero-count">0 / 0 Inputs Loaded</div>
+    </div>
+    <div class="ld-hero-right"></div>
+  </div>
+
+  <!-- FILTERS (External folded out — Phase 1) -->
+  <div class="ld-filters">
+    <button class="pf-chip active" data-sys="Drone" onclick="setLoadChip(this)">Drone</button>
+    <button class="pf-chip" data-sys="Base Station" onclick="setLoadChip(this)">Base</button>
+    <button class="pf-chip" data-sys="Control Point" onclick="setLoadChip(this)">Control Point</button>
+    <button class="pf-chip" data-sys="Check Point" onclick="setLoadChip(this)">Check Point</button>
+  </div>
+
+  <!-- REQUIRED INPUTS HEADER + CARD GRID -->
+  <div class="ld-reqhead">
+    <span class="ld-reqhead-t">Required Inputs</span>
+    <span class="ld-reqhead-c" id="ld-reqcount">0 / 0 uploaded</span>
+  </div>
+  <div class="ld-reqlegend"><span><b>*</b> Required</span><span class="ld-opt-tag" style="margin:0">optional</span><span style="text-transform:none;letter-spacing:0;font-size:9px">— not mandatory to run scoring</span></div>
+  <div id="ld-sections"></div>
+
+  <!-- SUBMIT BAR (Phase 2 — client-side validation; backend POST is Phase 3) -->
+  <div class="ld-submitbar">
+    <div class="ld-submit-msg" id="ld-submit-msg"></div>
+    <button class="ld-submit-btn" onclick="ldSubmit()">Validate &amp; Run Scoring</button>
+  </div>
+</div>
+
+<script>
+'use strict';
+var LOAD_SYSTEMS=[
+  {sys:'Drone', items:[
+    {name:'Drone Images',            fmt:'JPEG (folder / zip)',          id:'drone_images'},
+    {name:'Rover RINEX (obs + nav)', fmt:'.26O + .26P',                  id:'drone_rover_rinex'},
+    {name:'Flight Telemetry Log',    fmt:'.BIN (ArduPilot)',             id:'drone_bin'},
+    {name:'User Input',              fmt:'form.json',                    id:'drone_form'},
+    {name:'Hardware Override',       fmt:'hardware.json',                id:'drone_hardware', optional:true}
+  ]},
+  {sys:'Base Station', items:[
+    {name:'Base RINEX (obs + nav)',  fmt:'.26O + .26P',                  id:'base_rinex'},
+    {name:'Operation Log',           fmt:'operation_log.json',           id:'base_oplog'},
+    {name:'User Input',              fmt:'user_input.json',              id:'base_user_input'},
+    {name:'Hardware Override',       fmt:'hardware.json',                id:'base_hardware', optional:true}
+  ]},
+  // Control Point & Check Point upload PER POINT (RINEX/RTK export + user_input + hardware/oplog) in the repeatable rows below.
+  {sys:'Control Point', items:[]},
+  {sys:'Check Point', items:[]},
+  {sys:'Pre-Processing', items:[
+    {name:'Geotagged Images',          fmt:'JPEG + EXIF (folder / zip)', id:'pp_geotags'},
+    {name:'Control Point Coordinates', fmt:'gcp_coords.csv',             id:'pp_gcp_coords'},
+    {name:'Check Point Coordinates',   fmt:'cp_coords.csv',              id:'pp_cp_coords', optional:true},
+    {name:'Survey Manifest',           fmt:'pp_manifest.json',           id:'pp_manifest'},
+    {name:'Processing Report',         fmt:'.json (optional)',           id:'pp_report', optional:true}
+  ]},
+  {sys:'Processing', items:[
+    {name:'Processing Report',       fmt:'Agisoft .pdf',                 id:'proc_report'},
+    {name:'Processing Manifest',     fmt:'proc_manifest.json',           id:'proc_manifest'},
+    {name:'Orthomosaic',             fmt:'GeoTIFF (.tif)',               id:'proc_ortho', optional:true},
+    {name:'DSM - Surface Model',     fmt:'dem.tif',                      id:'proc_dsm'},
+    {name:'DTM - Terrain Model',     fmt:'dtm.tif',                      id:'proc_dtm', optional:true},
+    {name:'Point Cloud',             fmt:'.las / .laz',                  id:'proc_pcd', optional:true},
+    {name:'3D Mesh',                 fmt:'.obj',                         id:'proc_mesh', optional:true},
+    {name:'Pre-Processing Handoff',  fmt:'pp_manifest.json + gcp_coords.csv', id:'proc_pp_handoff', optional:true, note:'Output of the Pre-Processing stage'}
+  ]},
+  {sys:'Stockpile', items:[
+    {name:'Stockpile Volume Report', fmt:'stockpile_report.json',        id:'stk_report'},
+    {name:'Stockpile Manifest',      fmt:'stockpile_manifest.json',      id:'stk_manifest'},
+    {name:'Boundary Polygons',       fmt:'stockpile_polygons.geojson',   id:'stk_polygons', optional:true},
+    {name:'Processing Handoff',      fmt:'02 + 06 + dtm.tif',            id:'stk_proc_handoff', optional:true, note:'Output of the Processing stage'},
+    {name:'Reference Survey Handoff',fmt:'prior-job 02 + 06 + DTM',      id:'stk_ref_handoff', optional:true, note:'Only if a Survey/Design reference is used'}
+  ]},
+  {sys:'Pit', items:[
+    {name:'Pit Volume Report',       fmt:'pit_report.json',              id:'pit_report'},
+    {name:'Pit Manifest',            fmt:'pit_manifest.json',            id:'pit_manifest'},
+    {name:'Rim Polygons',            fmt:'pit_polygons.geojson',         id:'pit_polygons', optional:true},
+    {name:'Processing Handoff',      fmt:'dsm.tif + 02 + 06',            id:'pit_proc_handoff', optional:true, note:'Output of the Processing stage'},
+    {name:'Reference Survey Handoff',fmt:'ref_meta + prev_06/02 + prev_dsm', id:'pit_ref_handoff', optional:true, note:'Pre-excavation reference'}
+  ]},
+  {sys:'Waste Dump', items:[
+    {name:'Waste Dump Volume Report',fmt:'wd_report.json',               id:'wd_report'},
+    {name:'Waste Dump Manifest',     fmt:'wd_manifest.json',             id:'wd_manifest'},
+    {name:'Dump-Toe Polygons',       fmt:'wd_polygons.geojson',          id:'wd_polygons', optional:true},
+    {name:'Processing Handoff',      fmt:'02 + 06 + dtm.tif',            id:'wd_proc_handoff', optional:true, note:'Output of the Processing stage'},
+    {name:'Reference Survey Handoff',fmt:'prior-job 02 + 06 + DTM',      id:'wd_ref_handoff', optional:true, note:'Only if a Survey/Design reference is used'}
+  ]},
+  {sys:'Cut-Fill', items:[
+    {name:'Cut-Fill Report',         fmt:'cf_report.json',               id:'cf_report'},
+    {name:'Cut-Fill Manifest',       fmt:'cf_manifest.json',             id:'cf_manifest'},
+    {name:'Earthworks Polygons',     fmt:'cf_polygon.geojson',           id:'cf_polygons', optional:true},
+    {name:'Processing Handoff',      fmt:'02 + handoff_gapfill + 06 + dtm', id:'cf_proc_handoff', optional:true, note:'Output of the Processing stage'},
+    {name:'Reference Surface Handoff',fmt:'ref_meta + prev_06/02 + prev_dtm', id:'cf_ref_handoff', optional:true, note:'Required reference / design surface'}
+  ]}
+];
+
+// pre-populate some inputs so the page isn't empty on first load
+var LOAD_STATE={
+  drone_images:     {fn:'images/ (folder)',          sz:'2.10 GB', at:'20 May 2026, 10:05 AM', pv:'142 Images'},
+  drone_rover_rinex:{fn:'log166.26O + log166.26P',   sz:'186 MB',  at:'20 May 2026, 10:06 AM'},
+  drone_bin:        {fn:'00000215.BIN',              sz:'28 MB',   at:'20 May 2026, 10:07 AM'},
+  drone_form:       {fn:'form.json',                 sz:'0.3 KB',  at:'20 May 2026, 10:08 AM'},
+  drone_hardware:   {fn:'hardware.json',             sz:'0.3 KB',  at:'20 May 2026, 10:08 AM'},
+  base_rinex:       {fn:'log20.26O + log20.26P',     sz:'42 MB',   at:'19 May 2026, 12:30 PM'},
+  base_oplog:       {fn:'operation_log.json',        sz:'0.6 KB',  at:'19 May 2026, 12:31 PM'},
+  base_user_input:  {fn:'user_input.json',           sz:'0.8 KB',  at:'19 May 2026, 12:31 PM'},
+  base_hardware:    {fn:'hardware.json',             sz:'0.4 KB',  at:'19 May 2026, 12:31 PM'},
+  pp_geotags:       {fn:'geotags/ (folder)',         sz:'2.00 GB', at:'20 May 2026, 01:00 PM', pv:'12 Images'},
+  pp_gcp_coords:    {fn:'gcp_coords.csv',            sz:'3.1 KB',  at:'20 May 2026, 01:01 PM'},
+  pp_cp_coords:     {fn:'cp_coords.csv',             sz:'2.4 KB',  at:'20 May 2026, 01:01 PM'},
+  pp_manifest:      {fn:'pp_manifest.json',          sz:'4.2 KB',  at:'20 May 2026, 01:02 PM'},
+  proc_report:      {fn:'processing_report.pdf',     sz:'3.6 MB',  at:'20 May 2026, 03:10 PM'},
+  proc_manifest:    {fn:'proc_manifest.json',        sz:'1.2 KB',  at:'20 May 2026, 03:10 PM'},
+  proc_ortho:       {fn:'orthomosaic.tif',           sz:'1.16 GB', at:'20 May 2026, 03:12 PM'},
+  proc_dsm:         {fn:'dem.tif',                   sz:'74.7 MB', at:'20 May 2026, 03:11 PM'},
+  stk_report:       {fn:'stockpile_report.json',     sz:'21 KB',   at:'20 May 2026, 04:00 PM', pv:'2 Polygons'},
+  stk_manifest:     {fn:'stockpile_manifest.json',   sz:'0.7 KB',  at:'20 May 2026, 04:00 PM'},
+  stk_polygons:     {fn:'stockpile_polygons.geojson',sz:'3.4 KB',  at:'20 May 2026, 04:01 PM'},
+  stk_proc_handoff: {fn:'02 + 06 + dtm.tif',         sz:'1.0 MB',  at:'20 May 2026, 04:02 PM'},
+  pit_proc_handoff: {fn:'dsm.tif + 02 + 06',         sz:'1.0 MB',  at:'20 May 2026, 04:05 PM'},
+  pit_ref_handoff:  {fn:'ref_meta + prev_06/02 + prev_dsm', sz:'0.9 MB', at:'20 May 2026, 04:05 PM'},
+  wd_proc_handoff:  {fn:'02 + 06 + dtm.tif',         sz:'1.0 MB',  at:'20 May 2026, 04:06 PM'},
+  cf_proc_handoff:  {fn:'02 + handoff_gapfill + 06 + dtm', sz:'1.1 MB', at:'20 May 2026, 04:07 PM'},
+  cf_ref_handoff:   {fn:'ref_meta + prev_06/02 + prev_dtm', sz:'0.9 MB', at:'20 May 2026, 04:07 PM'}
+};
+
+var LOAD_FILTER='Drone';
+var LOAD_QUERY='';
+var LOAD_PENDING_ID=null; // which input is awaiting the file picker
+var LOAD_PENDING_POINT=null; // {sys,idx,fileId} when a per-point slot is awaiting the picker
+
+function setLoadChip(btn){
+  document.querySelectorAll('#view-load .pf-chip').forEach(function(c){c.classList.remove('active');});
+  btn.classList.add('active');
+  LOAD_FILTER=btn.getAttribute('data-sys');
+  renderLoad();
+}
+
+function loadStatusOf(it){
+  if(LOAD_STATE[it.id]) return 'uploaded';
+  if(it.optional) return 'optional';
+  return 'pending';
+}
+
+function triggerLoad(itemId){
+  LOAD_PENDING_ID=itemId;
+  LOAD_PENDING_POINT=null;
+  document.getElementById('ld-fileinput').click();
+}
+
+// Per-point file slot (RINEX / RTK export / operation log) on a repeatable form row
+function triggerPointFile(sys,idx,fileId){
+  LOAD_PENDING_POINT={sys:sys,idx:idx,fileId:fileId};
+  LOAD_PENDING_ID=null;
+  document.getElementById('ld-fileinput').click();
+}
+
+// Global dropzone / Browse Files -> route through the extension matcher
+function ldBrowse(){
+  LOAD_PENDING_ID=null;
+  document.getElementById('ld-fileinput').click();
+}
+
+// quick file size formatter
+function fmtBytes(n){
+  if(n<1024) return n+' B';
+  if(n<1024*1024) return (n/1024).toFixed(1)+' KB';
+  if(n<1024*1024*1024) return (n/1024/1024).toFixed(1)+' MB';
+  return (n/1024/1024/1024).toFixed(2)+' GB';
+}
+
+// parse a display size string ("8.4 GB") back to bytes (for live storage total)
+function ldParseSize(sz){
+  if(!sz) return 0;
+  var m=/([\d.]+)\s*(B|KB|MB|GB|TB)/i.exec(sz); if(!m) return 0;
+  var v=parseFloat(m[1]), u=m[2].toUpperCase();
+  var mult={B:1,KB:1024,MB:1048576,GB:1073741824,TB:1099511627776};
+  return v*(mult[u]||1);
+}
+
+function nowStamp(){
+  var d=new Date();
+  var mo=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d.getMonth()];
+  var h=d.getHours(), ap=h>=12?'PM':'AM'; h=h%12; if(h===0)h=12;
+  var mm=('0'+d.getMinutes()).slice(-2);
+  return d.getDate()+' '+mo+' '+d.getFullYear()+', '+(h<10?'0'+h:h)+':'+mm+' '+ap;
+}
+
+// derive plausible file extensions from an item's declared format label
+var LD_FMT_KEYWORDS={JPEG:['jpg','jpeg'],JPG:['jpg','jpeg'],TIFF:['tif','tiff'],GEOTIFF:['tif','tiff'],
+  KML:['kml'],SHP:['shp'],GEOJSON:['geojson','json'],CSV:['csv'],TXT:['txt'],PDF:['pdf'],XML:['xml'],
+  JSON:['json'],RINEX:['obs','yyo','rnx','o'],MRK:['mrk'],RTCM:['rtcm'],LAS:['las'],LAZ:['laz'],
+  POS:['pos'],DXF:['dxf'],OBJ:['obj'],MTL:['mtl'],FBX:['fbx'],XLSX:['xlsx'],ZIP:['zip'],PRJ:['prj'],
+  WKT:['wkt'],TER:['ter'],CMP:['cmp'],EXIF:['jpg','jpeg']};
+function ldExtsFor(it){
+  var set={}, m, re=/\.([a-z0-9]{1,5})/gi;
+  while((m=re.exec(it.fmt))!==null){ set[m[1].toLowerCase()]=1; }
+  (it.fmt.toUpperCase().match(/[A-Z]{2,8}/g)||[]).forEach(function(w){
+    (LD_FMT_KEYWORDS[w]||[]).forEach(function(x){set[x]=1;});
+  });
+  return set;
+}
+function ldMatchInput(file){
+  var ext=(file.name.split('.').pop()||'').toLowerCase();
+  if(/^\d{2}[a-z]$/.test(ext)) ext='obs';   // RINEX year-coded (.26o, .25o, .26n ...)
+  var firstMatch=null;
+  for(var g=0;g<LOAD_SYSTEMS.length;g++){
+    for(var i=0;i<LOAD_SYSTEMS[g].items.length;i++){
+      var it=LOAD_SYSTEMS[g].items[i];
+      if(ldExtsFor(it)[ext]){
+        if(!LOAD_STATE[it.id]) return it.id;   // prefer an unfilled slot
+        if(!firstMatch) firstMatch=it.id;       // else remember first (replace)
+      }
+    }
+  }
+  return firstMatch;
+}
+function ldIngestFiles(files){
+  var added=0, skipped=0;
+  for(var i=0;i<files.length;i++){
+    var f=files[i], id=ldMatchInput(f);
+    if(id){ LOAD_STATE[id]={fn:f.name, sz:fmtBytes(f.size), at:nowStamp()}; added++; }
+    else skipped++;
+  }
+  var msg=document.getElementById('ld-drop-msg');
+  if(msg){
+    msg.textContent=added+' file'+(added===1?'':'s')+' added'+(skipped?' · '+skipped+' unrecognized':'');
+    setTimeout(function(){ if(msg) msg.textContent=''; },4000);
+  }
+}
+
+function onLoadFileChosen(e){
+  var files=e.target.files;
+  if(!files || !files.length){ e.target.value=''; return; }
+  if(LOAD_PENDING_POINT){
+    var pp=LOAD_PENDING_POINT, f0=files[0], row=FORM_STATE[pp.sys] && FORM_STATE[pp.sys][pp.idx];
+    if(row){
+      if(!row.__files) row.__files={};
+      if(files.length>1){ var tot=0; for(var k=0;k<files.length;k++) tot+=files[k].size;
+        row.__files[pp.fileId]={fn:files.length+' files ('+f0.name+', …)',sz:fmtBytes(tot),at:nowStamp()}; }
+      else row.__files[pp.fileId]={fn:f0.name,sz:fmtBytes(f0.size),at:nowStamp()};
+    }
+    LOAD_PENDING_POINT=null; e.target.value=''; renderLoad(); return;
+  }
+  if(LOAD_PENDING_ID){
+    var f=files[0], id=LOAD_PENDING_ID;
+    if(files.length>1){
+      var total=0; for(var i=0;i<files.length;i++) total+=files[i].size;
+      var pvLbl=/imag|geotag|raw/.test(id)?' Images':' files';
+      LOAD_STATE[id]={fn:files.length+' files ('+f.name+', ...)', sz:fmtBytes(total), at:nowStamp(), pv:files.length.toLocaleString()+pvLbl};
+    } else {
+      LOAD_STATE[id]={fn:f.name, sz:fmtBytes(f.size), at:nowStamp()};
+    }
+    LOAD_PENDING_ID=null;
+  } else {
+    ldIngestFiles(files);           // came from the global dropzone / Browse Files
+  }
+  e.target.value=''; // reset so the same file can be picked again
+  renderLoad();
+}
+
+// icon chosen by input identity
+function ldIcon(it){
+  var k=(it.id+' '+it.name+' '+it.fmt).toLowerCase();
+  if(/imag|geotag|raw|jpeg|tiff|ortho|photo/.test(k))
+    return '<svg viewBox="0 0 20 20" fill="none"><rect x="2" y="3.5" width="16" height="13" rx="1.5" stroke="currentColor" stroke-width="1.1"/><circle cx="7" cy="8" r="1.4" stroke="currentColor" stroke-width="1.1"/><path d="M3 14l4-3.5 3 2.5 3-3 4 3.5" stroke="currentColor" stroke-width="1.1" stroke-linejoin="round"/></svg>';
+  if(/rinex|rover|base_rinex|gcp_rinex|gnss|rtk|broadcast/.test(k))
+    return '<svg viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="2" stroke="currentColor" stroke-width="1.1"/><path d="M5.5 5.5a6 6 0 0 1 9 0M5.5 14.5a6 6 0 0 0 9 0M3 10h3M14 10h3" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/></svg>';
+  if(/mrk|timemark|anchor|session|log/.test(k))
+    return '<svg viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="7" stroke="currentColor" stroke-width="1.1"/><path d="M10 6v4l2.5 2" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/></svg>';
+  if(/csv|coords|points|xlsx|stats|pdal/.test(k))
+    return '<svg viewBox="0 0 20 20" fill="none"><rect x="3" y="3" width="14" height="14" rx="1.5" stroke="currentColor" stroke-width="1.1"/><path d="M3 8h14M3 13h14M8 3v14" stroke="currentColor" stroke-width="1"/></svg>';
+  if(/cam|calib/.test(k))
+    return '<svg viewBox="0 0 20 20" fill="none"><rect x="2.5" y="5.5" width="15" height="10" rx="1.5" stroke="currentColor" stroke-width="1.1"/><path d="M7 5.5l1.2-2h3.6L13 5.5" stroke="currentColor" stroke-width="1.1" stroke-linejoin="round"/><circle cx="10" cy="10.5" r="2.6" stroke="currentColor" stroke-width="1.1"/></svg>';
+  return '<svg viewBox="0 0 20 20" fill="none"><path d="M5 2.5h6L15.5 7v10.5a1 1 0 0 1-1 1h-9a1 1 0 0 1-1-1V3.5a1 1 0 0 1 1-1z" stroke="currentColor" stroke-width="1.1" stroke-linejoin="round"/><path d="M11 2.5V7h4.5" stroke="currentColor" stroke-width="1.1" stroke-linejoin="round"/></svg>';
+}
+var LD_SVG_CHECK='<svg viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="8.5" stroke="currentColor" stroke-width="1.2"/><path d="M6.5 10.2l2.4 2.4 4.6-4.8" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+var LD_SVG_EMPTY='<svg viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="8.5" stroke="currentColor" stroke-width="1.2"/></svg>';
+
+function renderLoad(){
+  ldFormInit();
+  var root=document.getElementById('ld-sections');
+  var activeTotal=0, activeUploaded=0;
+  var html='';
+
+  LOAD_SYSTEMS.forEach(function(grp){
+    if(LOAD_FILTER!=='all' && grp.sys!==LOAD_FILTER) return;
+    var cards='', secUp=0;
+    grp.items.forEach(function(it){
+      activeTotal++;
+      var st=loadStatusOf(it);
+      var s=LOAD_STATE[it.id];
+      if(s){ activeUploaded++; secUp++; }
+
+      var body;
+      if(s){
+        body='<div class="ld-card-body">'
+          +'<div class="ld-card-pv">'+(s.pv||s.fn)+'</div>'
+          +(s.pv?'<div class="ld-card-sz">'+s.fn+' &middot; '+s.sz+'</div>':'<div class="ld-card-sz">'+s.sz+'</div>')
+          +'<div class="ld-card-foot"><span class="ld-card-at">'+(s.at||'')+'</span>'
+            +'<button class="ld-card-replace" onclick="triggerLoad(\''+it.id+'\')">Replace</button></div>'
+          +'</div>';
+      } else if(it.optional){
+        body='<div class="ld-card-body">'
+          +'<div class="ld-card-opt">Optional'+(it.note?ldInfo(it.note):'')+'</div>'
+          +'<button class="ld-card-btn" onclick="triggerLoad(\''+it.id+'\')">Upload File</button>'
+          +'</div>';
+      } else {
+        body='<div class="ld-card-body">'
+          +'<button class="ld-card-btn" onclick="triggerLoad(\''+it.id+'\')">Upload File</button>'
+          +'</div>';
+      }
+
+      // Header row: icon beside name (+ format); whole row collapses the card.
+      cards+='<div class="ld-card '+st+'" data-id="'+it.id+'">'
+        +'<div class="ld-card-head" onclick="ldToggleCard(this)">'
+        +'<div class="ld-card-ic">'+ldIcon(it)+'</div>'
+        +'<div class="ld-card-headtext">'
+        +'<div class="ld-card-name">'+it.name+(it.optional?'<span class="ld-opt-tag">optional</span>':'<span class="ld-req-star" title="Required">*</span>')+'</div>'
+        +'<div class="ld-card-fmt">'+it.fmt+'</div>'
+        +'</div>'
+        +'<div class="ld-card-status '+st+'">'+(s?LD_SVG_CHECK:LD_SVG_EMPTY)+'</div>'
+        +'<svg class="ld-card-chev" viewBox="0 0 12 12" fill="none"><path d="M3 4.5L6 7.5 9 4.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+        +'</div>'
+        +'<div class="ld-card-collapse">'
+        +body
+        +'<div class="ld-card-form" data-form="'+grp.sys+'"></div>' // Phase 2 hook
+        +'</div>'
+        +'</div>';
+    });
+    var pfUp=0, pfTot=0, _fd=LOAD_FORMS[grp.sys];
+    if(_fd && _fd.repeatable && _fd.pointFiles){
+      ldRows(grp.sys).forEach(function(row){ _fd.pointFiles.forEach(function(p){ pfTot++; if(row.__files&&row.__files[p.id]) pfUp++; }); });
+    }
+    html+='<div class="ld-csec" data-sys="'+grp.sys+'">'
+      +'<div class="ld-csec-head" onclick="ldToggleSec(this)">'
+        +'<div class="ld-csec-name">'+grp.sys+'</div>'
+        +'<div class="ld-csec-count">'+(secUp+pfUp)+' / '+(grp.items.length+pfTot)+'</div>'
+        +'<div class="ld-csec-rule"></div>'
+        +'<svg class="ld-csec-chev" viewBox="0 0 12 12" fill="none"><path d="M3 4.5L6 7.5 9 4.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+      +'</div>'
+      +'<div class="ld-csec-body">'
+        +'<div class="ld-cardgrid">'+cards+'</div>'
+        +ldFormSectionHtml(grp)
+      +'</div>'
+      +'</div>';
+  });
+
+  root.innerHTML=html || '<div class="pf-empty">No inputs in this group.</div>';
+
+  // ring + hero + required-inputs header (files + required form fields, active filter)
+  var _ac=ldComputeActive(); activeTotal=_ac.total; activeUploaded=_ac.uploaded;
+  var pct=activeTotal?Math.round(activeUploaded*100/activeTotal):0;
+  var C=326.7, arc=document.getElementById('ld-ring-arc');
+  if(arc) arc.style.strokeDashoffset=(C*(1-pct/100)).toFixed(1);
+  var setTxt=function(id,t){var el=document.getElementById(id); if(el) el.textContent=t;};
+  setTxt('ld-ring-pct', pct+'%');
+  setTxt('ld-hero-count', activeUploaded+' / '+activeTotal+' Inputs Loaded');
+  setTxt('ld-reqcount', activeUploaded+' / '+activeTotal+' uploaded');
+}
+
+// Collapse / expand a card from its header row (Phase 2: header also reveals the form)
+function ldToggleCard(headEl){
+  var card=headEl.closest('.ld-card'); if(card) card.classList.toggle('collapsed');
+}
+// Collapse / expand a whole subsystem panel
+function ldToggleSec(headEl){
+  var sec=headEl.closest('.ld-csec'); if(sec) sec.classList.toggle('collapsed');
+}
+// Info (i) icon with hover/focus tooltip — used for field help + optional notes
+function ldInfo(text){
+  var t=String(text).replace(/"/g,'&quot;');
+  return '<span class="ld-info" tabindex="0" onclick="event.stopPropagation()">'
+    +'<svg viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="5.5" stroke="currentColor" stroke-width="1"/><path d="M7 6.1v3.6M7 4.2v.1" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>'
+    +'<span class="ld-tip">'+t+'</span></span>';
+}
+
+
+
+/* ============================================================
+   LOAD · PHASE 2 — Per-subsystem user-input forms
+   Files live in LOAD_SYSTEMS; form specs in LOAD_FORMS (keyed by system).
+   Values in FORM_STATE. Edits update state + progress without rebuilding DOM.
+   ============================================================ */
+var LOAD_FORMS={
+  'Control Point':{title:'Control Points - per-point files',repeatable:true,itemLabel:'Point',
+    pointFiles:[
+      {id:'rinex',name:'RINEX (obs + nav)',fmt:'.26O + .26P',required:true},
+      {id:'user_input',name:'User Input',fmt:'user_input.json',required:true},
+      {id:'hardware',name:'Hardware Override',fmt:'hardware.json',optional:true},
+      {id:'oplog',name:'Operation Log (DGPS only)',fmt:'oplog.json',optional:true}
+    ],fields:[]},
+  'Check Point':{title:'Check Points - per-point files',repeatable:true,itemLabel:'Point',
+    pointFiles:[
+      {id:'rtk_export',name:'RTK Device Export',fmt:'cp_rtk_export.csv',required:true},
+      {id:'user_input',name:'User Input',fmt:'cp_user_input.json',required:true},
+      {id:'oplog',name:'Operation Log',fmt:'cp_oplog.json',optional:true}
+    ],fields:[]}
+};
+
+// Initial values (realistic seeds, mirrors the existing mock philosophy)
+var FORM_STATE, FORM_INIT=false;
+function ldNowLocal(){var d=new Date();var p=function(n){return(n<10?'0':'')+n;};return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate())+'T'+p(d.getHours())+':'+p(d.getMinutes());}
+function ldTodayLocal(){return ldNowLocal().slice(0,10);}
+function ldFormInit(){
+  if(FORM_INIT) return; FORM_INIT=true;
+  var gcpF=['log63.26O','log64.26O','log66.26O'];
+  var gcpRows=[1,2,3].map(function(i){return {__files:{
+    rinex:{fn:gcpF[i-1]+' + .26P',sz:'19 MB',at:'19 May 2026, 11:40 AM'},
+    user_input:{fn:'user_input.json',sz:'1.1 KB',at:'19 May 2026, 11:41 AM'},
+    hardware:{fn:'hardware.json',sz:'0.6 KB',at:'19 May 2026, 11:41 AM'}
+  }};});
+  var cpRows=[1,2,3].map(function(i){return {__files:{
+    rtk_export:{fn:'cp0'+i+'_rtk_export.csv',sz:'5 KB',at:'28 May 2026, 11:20 AM'},
+    user_input:{fn:'cp_user_input.json',sz:'1.0 KB',at:'28 May 2026, 11:21 AM'},
+    oplog:{fn:'cp_oplog.json',sz:'0.5 KB',at:'28 May 2026, 11:21 AM'}
+  }};});
+  FORM_STATE={ 'Control Point':gcpRows, 'Check Point':cpRows };
+}
+
+function ldSysKey(sys){return sys.toLowerCase().replace(/[^a-z0-9]+/g,'_');}
+function ldFieldDef(sys,fid){var f=LOAD_FORMS[sys]; if(!f) return null; for(var i=0;i<f.fields.length;i++) if(f.fields[i].id===fid) return f.fields[i]; return null;}
+function ldFormStore(sys,idx){return (idx===null||idx===undefined)?FORM_STATE[sys]:FORM_STATE[sys][idx];}
+function ldRows(sys){return Array.isArray(FORM_STATE[sys])?FORM_STATE[sys]:[];}
+
+function ldDefaultsFor(sys){
+  var def={}; LOAD_FORMS[sys].fields.forEach(function(f){
+    if(!f.id) return;
+    def[f.id]= f.type==='checkbox'?false : (f.type==='select'?(f.options[0]):'');
+  }); def.__files={}; return def;
+}
+
+function ldValidateField(field,val){
+  var isEmpty = (val===''||val===null||val===undefined||(field.type==='checkbox'&&val===false));
+  if(field.required && isEmpty) return field.type==='checkbox'?'Confirmation required':'Required';
+  if(isEmpty) return '';
+  if(field.type==='number'){
+    var n=parseFloat(val);
+    if(isNaN(n)) return 'Must be a number';
+    if(field.min!==undefined && n<field.min) return 'Min '+field.min;
+    if(field.max!==undefined && n>field.max) return 'Max '+field.max;
+  }
+  if(field.pattern && !field.pattern.test(String(val))) return 'Invalid format';
+  return '';
+}
+
+function ldFieldHtml(sys,field,val,idx){
+  if(field.group) return '<div class="ld-fgroup-sep">'+field.group+'</div>';
+  var key=ldSysKey(sys)+'_'+field.id+(idx!=null?'_'+idx:'');
+  var inId='ldf_'+key, errId='lderr_'+key;
+  var onCh="ldFormChange('"+sys+"','"+field.id+"',"+(idx!=null?idx:'null')+",this)";
+  var req=field.required?'<span class="ld-freq">*</span>':'';
+  var ctrl;
+  if(field.type==='select'){
+    ctrl='<select class="ld-finput" id="'+inId+'" onchange="'+onCh+'">'+field.options.map(function(o){
+      return '<option value="'+o+'"'+(String(val)===String(o)?' selected':'')+'>'+o+'</option>';}).join('')+'</select>';
+  } else if(field.type==='textarea'){
+    ctrl='<textarea class="ld-finput ld-ftext" id="'+inId+'" oninput="'+onCh+'">'+(val||'')+'</textarea>';
+  } else if(field.type==='checkbox'){
+    return '<label class="ld-fchk"><input type="checkbox" id="'+inId+'" '+(val?'checked':'')+' onchange="'+onCh+'"><span>'+field.label+req+'</span>'+(field.help?ldInfo(field.help):'')+'</label>';
+  } else {
+    var attrs=(field.type==='number'?(' min="'+(field.min!=null?field.min:'')+'" max="'+(field.max!=null?field.max:'')+'" step="'+(field.step||'any')+'"'):'');
+    ctrl='<input type="'+field.type+'" class="ld-finput" id="'+inId+'" value="'+(val!=null?String(val).replace(/"/g,'&quot;'):'')+'"'+attrs+' oninput="'+onCh+'">';
+  }
+  return '<div class="ld-fg">'
+    +'<label class="ld-flabel" for="'+inId+'">'+field.label+req+(field.help?ldInfo(field.help):'')+'</label>'
+    +ctrl
+    +'<div class="ld-ferr" id="'+errId+'"></div>'
+    +'</div>';
+}
+
+function ldPointFileHtml(sys,pf,idx,fst){
+  var s=(fst&&fst[pf.id])?fst[pf.id]:null;
+  var mark=pf.required?'<span class="ld-req-star" title="Required">*</span>':'<span class="ld-opt-tag">optional</span>';
+  var act='triggerPointFile(\''+sys+'\','+idx+',\''+pf.id+'\')';
+  var right=s
+    ? '<span class="ld-pf-fn">'+s.fn+'<span class="ld-pf-sz">'+(s.sz||'')+'</span></span><button class="ld-pf-btn" onclick="'+act+'">Replace</button>'
+    : '<button class="ld-pf-btn up" onclick="'+act+'">Upload</button>';
+  return '<div class="ld-pfile'+(s?' done':'')+'">'
+    +'<div class="ld-pf-meta"><span class="ld-pf-name">'+pf.name+mark+'</span><span class="ld-pf-fmt">'+pf.fmt+'</span></div>'
+    +'<div class="ld-pf-right">'+right+'</div>'
+    +'</div>';
+}
+function ldFormInnerHtml(grp){
+  var def=LOAD_FORMS[grp.sys]; if(!def) return '';
+  var head='<div class="ld-formsec-head">'+def.title+'</div>';
+  if(def.repeatable){
+    var rows=ldRows(grp.sys);
+    var body=rows.map(function(row,idx){
+      var pf=(def.pointFiles&&def.pointFiles.length)
+        ? '<div class="ld-pfiles">'+def.pointFiles.map(function(p){return ldPointFileHtml(grp.sys,p,idx,row.__files||{});}).join('')+'</div>'
+        : '';
+      return '<div class="ld-frow">'
+        +'<div class="ld-frow-head"><span>'+def.itemLabel+' #'+(idx+1)+'</span>'
+        +'<button class="ld-fdel" onclick="ldDelRow(\''+grp.sys+'\','+idx+')">Delete</button></div>'
+        +pf
+        +'</div>';
+    }).join('');
+    if(!rows.length) body='<div class="ld-fempty">No '+def.itemLabel+'s added yet.</div>';
+    return head+body+'<button class="ld-fadd" onclick="ldAddRow(\''+grp.sys+'\')">+ Add '+def.itemLabel+'</button>';
+  }
+  var st=FORM_STATE[grp.sys]||{};
+  return head+'<div class="ld-fgrid">'+def.fields.map(function(f){return ldFieldHtml(grp.sys,f,st[f.id],null);}).join('')+'</div>';
+}
+
+function ldFormSectionHtml(grp){
+  if(!LOAD_FORMS[grp.sys]) return '';
+  return '<div class="ld-formsec" id="ldform_'+ldSysKey(grp.sys)+'">'+ldFormInnerHtml(grp)+'</div>';
+}
+
+function ldFormChange(sys,fid,idx,el){
+  var field=ldFieldDef(sys,fid); if(!field) return;
+  var val=field.type==='checkbox'?el.checked:el.value;
+  if(field.type==='number' && val!=='') { /* keep as string in state; parse on validate */ }
+  ldFormStore(sys,idx)[fid]=val;
+  ldShowFieldError(sys,fid,idx,ldValidateField(field,val));
+  ldUpdateProgress();
+}
+function ldShowFieldError(sys,fid,idx,msg){
+  var key=ldSysKey(sys)+'_'+fid+(idx!=null?'_'+idx:'');
+  var errEl=document.getElementById('lderr_'+key), inEl=document.getElementById('ldf_'+key);
+  if(errEl) errEl.textContent=msg||'';
+  if(inEl) inEl.classList.toggle('invalid',!!msg);
+}
+function ldAddRow(sys){ if(!Array.isArray(FORM_STATE[sys])) FORM_STATE[sys]=[]; FORM_STATE[sys].push(ldDefaultsFor(sys)); ldReRenderForm(sys); ldUpdateProgress(); }
+function ldDelRow(sys,idx){ if(Array.isArray(FORM_STATE[sys])) FORM_STATE[sys].splice(idx,1); ldReRenderForm(sys); ldUpdateProgress(); }
+function ldReRenderForm(sys){
+  var el=document.getElementById('ldform_'+ldSysKey(sys));
+  if(el){ var grp=null; LOAD_SYSTEMS.forEach(function(g){if(g.sys===sys)grp=g;}); if(grp) el.innerHTML=ldFormInnerHtml(grp); }
+}
+
+// completion counts for the active filter: files (all items) + required form fields
+function ldComputeActive(){
+  var total=0, filled=0;
+  LOAD_SYSTEMS.forEach(function(grp){
+    if(LOAD_FILTER!=='all' && grp.sys!==LOAD_FILTER) return;
+    grp.items.forEach(function(it){ total++; if(LOAD_STATE[it.id]) filled++; });
+    var def=LOAD_FORMS[grp.sys]; if(!def) return;
+    var reqFields=def.fields.filter(function(f){return f.required;});
+    if(def.repeatable){
+      ldRows(grp.sys).forEach(function(row){
+        reqFields.forEach(function(f){ total++; if(ldValidateField(f,row[f.id])==='') filled++; });
+        (def.pointFiles||[]).forEach(function(p){ if(p.required){ total++; if(row.__files&&row.__files[p.id]) filled++; } });
+      });
+    } else {
+      var st=FORM_STATE[grp.sys]||{};
+      reqFields.forEach(function(f){ total++; if(ldValidateField(f,st[f.id])==='') filled++; });
+    }
+  });
+  return {total:total, uploaded:filled};
+}
+
+function ldUpdateProgress(){
+  var ac=ldComputeActive();
+  var pct=ac.total?Math.round(ac.uploaded*100/ac.total):0;
+  var C=326.7, arc=document.getElementById('ld-ring-arc');
+  if(arc) arc.style.strokeDashoffset=(C*(1-pct/100)).toFixed(1);
+  var set=function(id,t){var el=document.getElementById(id); if(el) el.textContent=t;};
+  set('ld-ring-pct',pct+'%');
+  set('ld-hero-count',ac.uploaded+' / '+ac.total+' Inputs Loaded');
+  set('ld-reqcount',ac.uploaded+' / '+ac.total+' uploaded');
+}
+
+// Validate everything (all systems) for the submit action
+function ldValidateAll(){
+  var errs=[];
+  LOAD_SYSTEMS.forEach(function(grp){
+    grp.items.forEach(function(it){ if(!it.optional && !LOAD_STATE[it.id]) errs.push(grp.sys+': file "'+it.name+'" required'); });
+    var def=LOAD_FORMS[grp.sys]; if(!def) return;
+    var check=function(store,tag){ def.fields.forEach(function(f){ var m=ldValidateField(f,store[f.id]); if(m) errs.push(grp.sys+tag+': '+f.label+' — '+m); }); };
+    if(def.repeatable){ var rows=ldRows(grp.sys); if(!rows.length) errs.push(grp.sys+': add at least one '+def.itemLabel);
+      rows.forEach(function(r,i){ check(r,' #'+(i+1));
+        (def.pointFiles||[]).forEach(function(p){ if(p.required && !(r.__files&&r.__files[p.id])) errs.push(grp.sys+' #'+(i+1)+': file "'+p.name+'" required'); }); }); }
+    else check(FORM_STATE[grp.sys]||{},'');
+  });
+  return errs;
+}
+function ldSubmit(){
+  var msg=document.getElementById('ld-submit-msg'); if(!msg) return;
+  var errs=ldValidateAll();
+  if(errs.length){
+    msg.className='ld-submit-msg err';
+    msg.textContent=errs.length+' issue'+(errs.length>1?'s':'')+' to resolve · '+errs.slice(0,3).join(' · ')+(errs.length>3?' …':'');
+    return;
+  }
+  msg.className='ld-submit-msg ok';
+  msg.textContent='All inputs valid — payload ready for scoring.';
+  var payload={instance:'Pitpack 4 · 28 Mar 2026',files:LOAD_STATE,forms:FORM_STATE};
+  console.log('LOAD submit payload (no backend wired):',payload);
+  // Backend contract (Phase 3): POST /api/loads/submit
+}
+
+/* ---- standalone boot ---- */
+document.getElementById('ld-fileinput').addEventListener('change', onLoadFileChosen);
+renderLoad();
+</script>
+</body>
+</html>

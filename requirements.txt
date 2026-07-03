@@ -1,0 +1,13 @@
+# CBMI Loop desktop — runtime dependencies (Python 3.12)
+fastapi>=0.110
+uvicorn>=0.29
+python-multipart>=0.0.9
+cryptography>=42        # AES-GCM at-rest encryption of the scoring IP (cbmi/crypt.py)
+openpyxl>=3.1
+numpy>=1.26,<2
+georinex>=1.16
+xarray
+pandas
+pillow>=10
+pymavlink>=2.4
+pywebview>=5 ; python_version >= "3.9"

@@ -1,0 +1,69 @@
+/* hw-integration.css — keep the reference hardware UI/UX (central product image,
+   score hero, building-block ribbon) and only:
+     (1) trim the nav to the 4 hardware pages + a Load link, and
+     (2) add a compact fixed bar with the live grade/decision + Excel/Provenance. */
+
+/* ---- nav trim: hide everything except the 4 hardware icons + Load ---- */
+#nbar .nbar-left,
+#ntab-conf, #conf-dd, #ntab-sr, #ntab-learning, #ntab-analytics,
+#nbadge-origin, #nbadge-proof,
+#modnav-wrap, .modnav-wrap { display: none !important; }
+/* context selection bar (entity/location/site/survey + Apply) — non-functional
+   without a backend. Hide ONLY the selection cells, not #dimbar itself, because
+   the hardware nav icons are relocated into #dimbar's .nbar-right. */
+#dimbar .ctx-cell, #dimbar .ctx-apply { display: none !important; }
+
+#nbadge-load { display: inline-flex !important; opacity: .9; cursor: pointer; }
+#nbadge-load.locked { opacity: .9 !important; }
+
+/* remove the mock trend sparkline (no real history from the pipeline) */
+.hw-view .spark-wrap, .hw-view .spark-label { display: none !important; }
+
+/* FIX: the fixed score column (.left, z-index:100) overlaps the building-block
+   strip and was swallowing clicks on the cards / their "Details ›" right-panel
+   triggers. Let clicks pass through its (empty) area. Its only interactive child
+   was the trend, which is hidden above — so nothing is lost. Real controls are
+   re-enabled defensively. */
+.hw-view .left { pointer-events: none !important; }
+.hw-view .left button, .hw-view .left select, .hw-view .left a,
+.hw-view .left input, .hw-view .left label { pointer-events: auto !important; }
+
+/* FIX: the product photos use mix-blend-mode:screen, which melts the photo's black
+   studio background into the page — but it ALSO makes the dark parts of the drone /
+   checkpoint (carbon-fibre props, dark edges) go transparent and vanish into the
+   background. Use normal blend on the image itself so the whole object stays visible
+   and separated. (.product-glow / .product-halo keep screen — they're meant to lighten.) */
+#view-drone .product-img, #view-base .product-img,
+#view-gcp .product-img, #view-checkpoint .product-img { mix-blend-mode: normal !important; }
+
+/* ---- compact live-result bar (bottom-right, non-intrusive) ---- */
+.cbmi-bar{
+  position:fixed; right:18px; bottom:18px; z-index:8000;
+  display:flex; align-items:center; gap:14px;
+  padding:11px 16px; border-radius:6px;
+  background:rgba(20,20,24,.92); backdrop-filter:blur(6px);
+  border:.5px solid var(--line,rgba(200,215,228,.14));
+  box-shadow:0 10px 34px rgba(0,0,0,.5);
+  font-family:var(--fh,'Barlow',sans-serif); color:var(--p1,rgba(255,255,255,.92));
+  transition:opacity .2s; max-width:min(560px,92vw);
+}
+.cbmi-bar.hidden{ opacity:0; pointer-events:none; }
+.cbmi-bar-live{ font-family:var(--fm,monospace); font-size:7.5px; font-weight:600;
+  letter-spacing:.16em; text-transform:uppercase; color:var(--acc,#00bfff);
+  border:.5px solid rgba(0,191,255,.5); border-radius:2px; padding:3px 7px; white-space:nowrap; }
+.cbmi-bar-score{ font-weight:700; font-size:20px; line-height:1; }
+.cbmi-bar-meta{ display:flex; flex-direction:column; gap:2px; min-width:0; }
+.cbmi-bar-grade{ font-weight:600; font-size:12px; white-space:nowrap; }
+.cbmi-bar-dec{ font-family:var(--fm,monospace); font-size:8.5px; letter-spacing:.08em;
+  text-transform:uppercase; }
+.cbmi-bar-dec.good{ color:var(--teal,#64be94); }
+.cbmi-bar-dec.review{ color:var(--amber,#d2aa4e); }
+.cbmi-bar-dec.resurvey{ color:var(--red,#c86262); }
+.cbmi-bar-actions{ display:flex; gap:7px; margin-left:6px; }
+.cbmi-bar-btn{ font-family:var(--fm,monospace); font-size:8px; font-weight:600; letter-spacing:.1em;
+  text-transform:uppercase; padding:7px 11px; border-radius:2px; cursor:pointer; text-decoration:none;
+  background:transparent; border:.5px solid var(--line,rgba(200,215,228,.2)); color:var(--p1,#fff);
+  white-space:nowrap; }
+.cbmi-bar-btn.primary{ border-color:rgba(0,191,255,.5); background:rgba(0,191,255,.08); color:var(--acc,#00bfff); }
+.cbmi-bar-btn:hover{ border-color:var(--acc,#00bfff); color:var(--acc,#00bfff); }
+.cbmi-bar-note{ font-family:var(--fm,monospace); font-size:9px; color:var(--amber,#d2aa4e); }
