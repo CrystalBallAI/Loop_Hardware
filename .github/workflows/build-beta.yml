@@ -1,7 +1,8 @@
 name: build-beta
 
-# Per-tester beta builds for all three targets. Trigger manually
-# (Actions -> build-beta -> Run workflow) with the tester id + expiry days.
+# Two ways to run:
+#  * push a tag matching build-*   -> auto-builds with defaults (tester=beta, 14d)
+#  * Actions -> build-beta -> Run  -> per-tester build (set tester + days)
 on:
   workflow_dispatch:
     inputs:
@@ -13,6 +14,13 @@ on:
         description: "Days until the build expires"
         required: true
         default: "14"
+  push:
+    tags:
+      - "build-*"
+
+concurrency:
+  group: build-beta-${{ github.ref }}
+  cancel-in-progress: false
 
 permissions:
   contents: read
@@ -30,11 +38,12 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt pyinstaller
       - name: Build .app + .dmg
-        run: ./build/build_macos.sh --tester "${{ inputs.tester }}" --days "${{ inputs.days }}"
+        run: ./build/build_macos.sh --tester "${{ github.event.inputs.tester || 'beta' }}" --days "${{ github.event.inputs.days || '14' }}"
       - uses: actions/upload-artifact@v4
         with:
-          name: CBMI-Loop-macOS-arm64-${{ inputs.tester }}
+          name: CBMI-Loop-macOS-arm64-${{ github.event.inputs.tester || 'beta' }}
           path: dist/*.dmg
+          if-no-files-found: error
 
   # -------------------------------------------------------- macOS (Intel) ----
   macos-x64:
@@ -48,11 +57,12 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt pyinstaller
       - name: Build .app + .dmg
-        run: ./build/build_macos.sh --tester "${{ inputs.tester }}" --days "${{ inputs.days }}"
+        run: ./build/build_macos.sh --tester "${{ github.event.inputs.tester || 'beta' }}" --days "${{ github.event.inputs.days || '14' }}"
       - uses: actions/upload-artifact@v4
         with:
-          name: CBMI-Loop-macOS-x64-${{ inputs.tester }}
+          name: CBMI-Loop-macOS-x64-${{ github.event.inputs.tester || 'beta' }}
           path: dist/*.dmg
+          if-no-files-found: error
 
   # ------------------------------------------------------------- Windows -----
   windows-x64:
@@ -65,11 +75,11 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt pyinstaller
-      - name: Icon + vendor(encrypt) + stamp
+      - name: Icon + ensure-encrypted + stamp
         run: |
           python build/make_icon.py
           python vendor.py --encrypt-only
-          python build/inject_build_info.py --tester "${{ inputs.tester }}" --days "${{ inputs.days }}"
+          python build/inject_build_info.py --tester "${{ github.event.inputs.tester || 'beta' }}" --days "${{ github.event.inputs.days || '14' }}"
       - name: Freeze (onedir)
         run: python -m PyInstaller --noconfirm --clean cbmi_loop.spec
       - name: Reset build stamp
@@ -79,9 +89,10 @@ jobs:
       - name: Build installer (Inno Setup)
         run: |
           & "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe" `
-            /DTesterId=${{ inputs.tester }} /DAppVersion=0.1.0-beta `
+            /DTesterId=${{ github.event.inputs.tester || 'beta' }} /DAppVersion=0.1.0-beta `
             installer\windows.iss
       - uses: actions/upload-artifact@v4
         with:
-          name: CBMI-Loop-Windows-x64-${{ inputs.tester }}
+          name: CBMI-Loop-Windows-x64-${{ github.event.inputs.tester || 'beta' }}
           path: dist/*Setup.exe
+          if-no-files-found: error
