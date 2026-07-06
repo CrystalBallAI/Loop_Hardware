@@ -8,22 +8,29 @@ kitchen-sink (e.g. Anaconda) environment drags in; a clean venv build is smaller
 still. Build via build/build_macos.sh or `pyinstaller cbmi_loop.spec`.
 """
 import sys
-from PyInstaller.utils.hooks import collect_submodules, collect_data_files
+from PyInstaller.utils.hooks import collect_submodules, collect_data_files, collect_all
 
 datas = [
     ("webui", "webui"),
     ("runtime_data", "runtime_data"),
 ]
-# georinex/xarray ship data files + version markers loaded at runtime
-for pkg in ("georinex", "xarray"):
-    try:
-        datas += collect_data_files(pkg)
-    except Exception:
-        pass
-
+binaries = []
 hiddenimports = []
 for pkg in ("cbmi_pipelines", "cbmi", "server", "uvicorn"):
     hiddenimports += collect_submodules(pkg)
+# CRITICAL: the RINEX parsers (drone/base/gcp) do `import georinex` LAZILY inside
+# a function, so PyInstaller's static analysis never sees it and skips georinex +
+# its runtime deps (hatanaka for compressed RINEX, xarray). collect_all pulls each
+# package's submodules + data + binaries. WITHOUT this the frozen app raises
+# "No module named 'georinex'" on drone/base/gcp — only checkpoint (no RINEX) works.
+for pkg in ("georinex", "hatanaka", "xarray"):
+    try:
+        d, b, h = collect_all(pkg)
+        datas += d
+        binaries += b
+        hiddenimports += h
+    except Exception:
+        pass
 # multipart + cryptography backends PyInstaller's static analysis can miss
 hiddenimports += ["multipart", "cryptography.hazmat.backends.openssl"]
 
@@ -39,7 +46,7 @@ block_cipher = None
 a = Analysis(
     ["app.py"],
     pathex=["."],
-    binaries=[],
+    binaries=binaries,
     datas=datas,
     hiddenimports=hiddenimports,
     hookspath=[],
